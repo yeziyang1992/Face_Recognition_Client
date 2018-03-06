@@ -71,10 +71,8 @@ ___
                 QtWidgets.QMessageBox.warning(self, u"Warning", u"没有检测到图片", buttons=QtWidgets.QMessageBox.Ok,
                                               defaultButton=QtWidgets.QMessageBox.Ok)
 ```
-    
     重点说说这个函数，首先查询摄像头是否打开，如果打开了，就获取当前显示的一帧当作照片，然后检测是否有人脸，检测了人脸后分别与数据集中的人脸进行一一比对，然后输出相似距离最低的姓名。
-    注意：如下程序中的4代表faces文件夹中的人脸标签数，可自行修改。
-    
+    注意：如下程序中的4代表faces文件夹中的人脸标签数，可自行修改。 
 ```python
  for i in range(4):
     print('%s: %s' % (i, face_like[i]))
