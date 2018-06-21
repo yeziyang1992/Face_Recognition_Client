@@ -86,12 +86,11 @@ def read_data(path, h=size, w=size):
     return labs, imgs
 
 
-# 读取一个文件夹 把标签存放在labs,把图片存放在imgs中
 # 函数返回人脸标签数, 人脸数组
 def get_triplet_data(path):
-
-    max_num = len(os.listdir(path))    # 获取人脸标签数
-    face_array = [[] for n in range(max_num)]   # 初始化二维数组
+    names = []
+    num = len(os.listdir(path))             # 获取人脸标签数
+    face_array = [[] for n in range(num)]   # 初始化二维数组
     for i, filename in enumerate(os.listdir(path)):
         for img_name in os.listdir(path+filename):
             if img_name.endswith('.jpg'):
@@ -99,7 +98,8 @@ def get_triplet_data(path):
                 img = cv2.imread(path_name)
                 img = np.array(img)
                 face_array[i].append(img.astype('float32') / 255.0)
-    return max_num, face_array
+        names.append(filename)
+    return num, names, face_array
 
 
 def generate_train_data(image_array, num):

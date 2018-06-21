@@ -8,6 +8,9 @@ class Siamese:
         self.x1 = tf.placeholder(tf.float32, [None, size, size, 3])
         self.x2 = tf.placeholder(tf.float32, [None, size, size, 3])
         self.x3 = tf.placeholder(tf.float32, [None, size, size, 3])
+        self.d1 = tf.placeholder(tf.float32, [None, 128])
+        self.d2 = tf.placeholder(tf.float32, [None, 128])
+        self.d3 = tf.placeholder(tf.float32, [None, 128])
         self.keep_f = tf.placeholder(tf.float32)
 
         with tf.variable_scope("siamese") as scope:
@@ -19,7 +22,7 @@ class Siamese:
 
         # Create loss
         self.loss = self.loss_with_spring()
-        self.look_like = self.look_like()
+        self.look_like = self.cal_distance()
 
     def network(self, x, keep_f):
         with tf.variable_scope("conv1"):
@@ -72,14 +75,14 @@ class Siamese:
             pool5 = self.pool_layer(conv13, 1.0)
 
         with tf.variable_scope("full_layer1"):
-            # 全连接层1，此时输入图片大小为7*7
-            f1 = self.full_layer(pool5, [3 * 3 * 512, 1024], [1024], keep_f, True)
+            # 全连接层1，此时输入图片大小为3*3
+            f1 = self.full_layer(pool5, [3 * 3 * 512, 4096], [4096], keep_f, True)
         with tf.variable_scope("full_layer2"):
-            # 全连接层2，此时输入2048
-            f2 = self.full_layer(f1, [1024, 512], [512], keep_f)
+            # 全连接层2，此时输入4096
+            f2 = self.full_layer(f1, [4096, 1024], [1024], keep_f)
         with tf.variable_scope("full_layer3"):
-            # 全连接层2，此时输入2048
-            f3 = self.full_layer(f2, [512, 128], [128], 1.0)
+            # 全连接层3，此时输入1024
+            f3 = self.full_layer(f2, [1024, 128], [128], 1.0)
         return f3
 
     @staticmethod
@@ -89,7 +92,7 @@ class Siamese:
                                   initializer=init)
 
         biases = tf.get_variable("cnn_biases", dtype=tf.float32,
-                                 initializer=tf.constant(0.02, shape=bias_shape, dtype=tf.float32))
+                                 initializer=tf.constant(0.01, shape=bias_shape, dtype=tf.float32))
         conv = tf.nn.conv2d(input_image, weights,
                             strides=[1, 1, 1, 1], padding='SAME')
         return tf.nn.relu(conv + biases)
@@ -107,7 +110,7 @@ class Siamese:
                                   initializer=init)
 
         biases = tf.get_variable("cnn_biases", dtype=tf.float32,
-                                 initializer=tf.constant(0.02, shape=bias_shape, dtype=tf.float32))
+                                 initializer=tf.constant(0.01, shape=bias_shape, dtype=tf.float32))
         if reshape:
             input_image = tf.reshape(input_image, [-1, 3*3*512])
         dense = tf.nn.relu(tf.matmul(input_image, weights) + biases)
@@ -116,7 +119,7 @@ class Siamese:
 
     def loss_with_spring(self):
 
-        margin = 5.0
+        margin = 0.2
         anchor_output = self.o1     # shape [None, 128]
         positive_output = self.o2   # shape [None, 128]
         negative_output = self.o3   # shape [None, 128]
@@ -129,14 +132,18 @@ class Siamese:
 
         return loss
 
-    def look_like(self):
+    def cal_distance(self):
         anchor_output = self.o1  # shape [None, 128]
         positive_output = self.o2  # shape [None, 128]
-
         d_look = tf.reduce_sum(tf.square(anchor_output - positive_output), 1, name="d_look")
         distance = tf.reduce_mean(d_look, name="distance")
-
         return distance
+
+
+
+
+
+
 
 
 
