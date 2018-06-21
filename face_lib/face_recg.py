@@ -1,7 +1,6 @@
 import tensorflow as tf
 
-import inference
-from face_lib import my_api
+from face_lib import my_api,inference
 
 
 class Recognize:
